@@ -6,9 +6,12 @@ import faang.school.achievement.repository.AchievementRepository;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.IterableUtils;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
 
 @Slf4j
 @Component
@@ -35,12 +38,12 @@ public class AchievementCache {
     @PostConstruct
     public void load() {
         log.info("AchievementCache: load...");
-        Iterable<Achievement> achievements = achievementRepository.findAll();
+        List<Achievement> achievements = IterableUtils.toList(achievementRepository.findAll());
         redisTemplate.executePipelined((RedisCallback<Object>) connection -> {
             achievements.forEach(achievement ->
                     redisTemplate.opsForHash().put("achievements", achievement.getTitle(), achievement));
             return null;
         });
-        log.info("AchievementCache: load done");
+        log.info("AchievementCache: load done {} items", achievements.size());
     }
 }
