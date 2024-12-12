@@ -29,37 +29,52 @@ public class AchievementCache {
     private final AchievementMapper achievementMapper;
 
     public Achievement get(String title) {
+        log.debug("AchievementCache: Attempting to get achievement with title: {}", title);
+
         Object value = redisTemplate.opsForHash().get(KEY_HASH, title);
         if (value == null) {
-            log.info("AchievementCache: miss: {}", title);
+            log.info("AchievementCache: Cache miss for title: {}", title);
+
             Achievement achievement = achievementRepository.findByTitle(title);
-            if (achievement != null) {
-                log.info("AchievementCache: put: {}", title);
-                AchievementCacheDto dto = achievementMapper.fromEntityToCacheDto(achievement);
-                redisTemplate.opsForHash().put(KEY_HASH, title, dto);
+            if (achievement == null) {
+                log.warn("AchievementCache: Achievement not found in database for title: {}", title);
+                return null;
             }
+
+            log.info("AchievementCache: Adding achievement with title '{}' to cache", title);
+            AchievementCacheDto dto = achievementMapper.fromEntityToCacheDto(achievement);
+            redisTemplate.opsForHash().put(KEY_HASH, title, dto);
         }
-        log.info("AchievementCache: get: {} -> {}", title, value);
+        log.debug("AchievementCache: Cache hit for title: {}", title);
+
+        log.debug("AchievementCache: Converting cache data for title: {}", title);
         AchievementCacheDto dto = objectMapper.convertValue(value, AchievementCacheDto.class);
-        return achievementMapper.fromCacheDtoToEntity(dto);
+        Achievement achievement = achievementMapper.fromCacheDtoToEntity(dto);
+        log.info("AchievementCache: Returning achievement for title: {}", title);
+
+        return achievement;
     }
 
     @PostConstruct
     public void load() {
-        log.info("AchievementCache: load...");
+        log.info("AchievementCache: Starting cache initialization...");
+
         List<Achievement> achievements = IterableUtils.toList(achievementRepository.findAll());
-        if (!achievements.isEmpty()) {
-            redisTemplate.executePipelined((RedisCallback<Object>) connection -> {
-                achievements.forEach(achievement -> {
-                    AchievementCacheDto dto = achievementMapper.fromEntityToCacheDto(achievement);
-                    redisTemplate.opsForHash().put(KEY_HASH, dto.getTitle(), dto);
-                });
-                return null;
-            });
-            redisTemplate.expire(KEY_HASH, Duration.ofDays(TTL));
-            log.info("AchievementCache: load done {} items", achievements.size());
-        } else {
-            log.warn("AchievementCache: No items found to load into Redis cache.");
+        if (achievements.isEmpty()) {
+            log.warn("AchievementCache: No achievements found in the database. Cache will not be populated.");
+            return;
         }
+        log.info("AchievementCache: Found {} achievements. Loading into Redis cache...", achievements.size());
+
+        redisTemplate.executePipelined((RedisCallback<Object>) connection -> {
+            achievements.forEach(achievement -> {
+                AchievementCacheDto dto = achievementMapper.fromEntityToCacheDto(achievement);
+                redisTemplate.opsForHash().put(KEY_HASH, dto.getTitle(), dto);
+                log.debug("AchievementCache: Added achievement '{}' to cache", dto.getTitle());
+            });
+            return null;
+        });
+        redisTemplate.expire(KEY_HASH, Duration.ofDays(TTL));
+        log.info("AchievementCache: Cache initialization completed. Total {} achievements cached.", achievements.size());
     }
 }

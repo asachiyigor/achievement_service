@@ -20,6 +20,7 @@ import org.testcontainers.utility.DockerImageName;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest
@@ -30,16 +31,19 @@ class AchievementCacheIT {
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
 
+    @Autowired
+    private AchievementCache achievementCache;
+
+    @Autowired
+    private AchievementRepository achievementRepository;
+
     @Container
     public static PostgreSQLContainer<?> POSTGRESQL_CONTAINER =
             new PostgreSQLContainer<>("postgres:13.6");
+
     @Container
     private static final RedisContainer REDIS_CONTAINER =
             new RedisContainer(DockerImageName.parse("redis/redis-stack:latest"));
-    @Autowired
-    private AchievementCache achievementCache;
-    @Autowired
-    private AchievementRepository achievementRepository;
 
     @DynamicPropertySource
     static void setProperties(DynamicPropertyRegistry registry) {
@@ -67,5 +71,23 @@ class AchievementCacheIT {
 
         assertEquals(achievements.size(), redisTemplate.opsForHash().size("achievements"));
         assertTrue(redisTemplate.opsForHash().hasKey("achievements", title));
+    }
+
+    @Test
+    void testGet_Positive(){
+        Achievement achievement = Achievement.builder()
+                .id(4L)
+                .title("SENSEI")
+                .build();
+
+        Achievement result = achievementCache.get(achievement.getTitle());
+        assertEquals(achievement.getId(), result.getId());
+    }
+
+    @Test
+    void testGet_Negative(){
+        String title = "NotFound";
+        Achievement result = achievementCache.get(title);
+        assertNull(result);
     }
 }
