@@ -48,14 +48,18 @@ public class AchievementCache {
     public void load() {
         log.info("AchievementCache: load...");
         List<Achievement> achievements = IterableUtils.toList(achievementRepository.findAll());
-        redisTemplate.executePipelined((RedisCallback<Object>) connection -> {
-            achievements.forEach(achievement -> {
-                AchievementCacheDto dto = achievementMapper.fromEntityToCacheDto(achievement);
-                redisTemplate.opsForHash().put(KEY_HASH, dto.getTitle(), dto);
+        if (!achievements.isEmpty()) {
+            redisTemplate.executePipelined((RedisCallback<Object>) connection -> {
+                achievements.forEach(achievement -> {
+                    AchievementCacheDto dto = achievementMapper.fromEntityToCacheDto(achievement);
+                    redisTemplate.opsForHash().put(KEY_HASH, dto.getTitle(), dto);
+                });
+                return null;
             });
             redisTemplate.expire(KEY_HASH, Duration.ofDays(TTL));
-            return null;
-        });
-        log.info("AchievementCache: load done {} items", achievements.size());
+            log.info("AchievementCache: load done {} items", achievements.size());
+        } else {
+            log.warn("AchievementCache: No items found to load into Redis cache.");
+        }
     }
 }
