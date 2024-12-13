@@ -12,11 +12,14 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 @TestConfiguration
 public class RedisConfig {
+    @Value("${spring.data.redis.host}")
+    private String host;
+
+    @Value("${spring.data.redis.port}")
+    private int port;
 
     @Bean
-    JedisConnectionFactory jedisConnectionFactory(
-            @Value("${spring.data.redis.host}") String host,
-            @Value("${spring.data.redis.port}") int port) {
+    JedisConnectionFactory jedisConnectionFactory() {
         RedisStandaloneConfiguration redisStandaloneConfiguration =
                 new RedisStandaloneConfiguration(host, port);
         return new JedisConnectionFactory(redisStandaloneConfiguration);
