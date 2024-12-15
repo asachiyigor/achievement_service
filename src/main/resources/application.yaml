@@ -35,3 +35,6 @@ logging:
 project-service:
   host: localhost
   port: 8082
+user-service:
+  host: localhost
+  port: 8080
