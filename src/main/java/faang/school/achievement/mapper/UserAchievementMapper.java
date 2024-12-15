@@ -9,11 +9,10 @@ import org.mapstruct.factory.Mappers;
 
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface UserAchievementMapper {
-    UserAchievementMapper INSTANCE = Mappers.getMapper(UserAchievementMapper.class);
 
-    @Mapping(source = "achievement.id", target = "achievementId")
+    @Mapping(source = "achievement", target = "achievement")
     UserAchievementDto toDto(UserAchievement userAchievement);
 
-    @Mapping(source = "achievementId", target = "achievement.id")
+    @Mapping(source = "achievement", target = "achievement")
     UserAchievement toEntity(UserAchievementDto userAchievementDto);
 }

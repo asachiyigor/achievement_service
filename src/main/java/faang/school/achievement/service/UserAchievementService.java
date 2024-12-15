@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import faang.school.achievement.client.UserServiceClient;
 import faang.school.achievement.dto.AchievementEventDto;
 import faang.school.achievement.dto.UserAchievementDto;
+import faang.school.achievement.dto.UserAchievementRequestDto;
 import faang.school.achievement.dto.UserDto;
 import faang.school.achievement.mapper.UserAchievementMapper;
 import faang.school.achievement.model.Achievement;
@@ -29,9 +30,9 @@ public class UserAchievementService {
     private final AchievementMessagePublisher achievementMessagePublisher;
     private final ObjectMapper objectMapper;
 
-    public UserAchievementDto addUserAchievement(UserAchievementDto userAchievementDto) throws IOException {
-        Long userId = userAchievementDto.getUserId();
-        Long achievementId = userAchievementDto.getAchievementId();
+    public UserAchievementDto addUserAchievement(UserAchievementRequestDto userAchievementRequestDto) throws IOException {
+        Long userId = userAchievementRequestDto.getUserId();
+        Long achievementId = userAchievementRequestDto.getAchievementId();
 
         validateUserIdExists(userId);
         Achievement achievement = achievementRepository
@@ -49,15 +50,15 @@ public class UserAchievementService {
                 .build();
 
         userAchievementRepository.save(userAchievement);
-        publishAchievementEvent(userAchievementDto);
+        publishAchievementEvent(userAchievementRequestDto);
         return userAchievementMapper.toDto(userAchievement);
     }
 
-    private void publishAchievementEvent(UserAchievementDto userAchievementDto) throws IOException {
+    private void publishAchievementEvent(UserAchievementRequestDto userAchievementRequestDto) throws IOException {
         AchievementEventDto achievementEventDto = AchievementEventDto
                 .builder()
-                .userId(userAchievementDto.getUserId())
-                .achievementId(userAchievementDto.getAchievementId())
+                .userId(userAchievementRequestDto.getUserId())
+                .achievementId(userAchievementRequestDto.getAchievementId())
                 .createdAt(LocalDateTime.now())
                 .build();
         achievementMessagePublisher.publish(objectMapper.writeValueAsString(achievementEventDto));

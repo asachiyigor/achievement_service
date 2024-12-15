@@ -3,11 +3,14 @@ package faang.school.achievement.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import faang.school.achievement.client.UserServiceClient;
+import faang.school.achievement.dto.AchievementDto;
 import faang.school.achievement.dto.AchievementEventDto;
 import faang.school.achievement.dto.UserAchievementDto;
+import faang.school.achievement.dto.UserAchievementRequestDto;
 import faang.school.achievement.dto.UserDto;
 import faang.school.achievement.mapper.UserAchievementMapper;
 import faang.school.achievement.model.Achievement;
+import faang.school.achievement.model.Rarity;
 import faang.school.achievement.model.UserAchievement;
 import faang.school.achievement.publisher.AchievementMessagePublisher;
 import faang.school.achievement.repository.AchievementRepository;
@@ -56,8 +59,9 @@ public class UserAchievementServiceTest {
     @Test
     void addUserAchievementSuccess() throws IOException {
         Long userId = 1L;
-        Long achievementId = 1L;
-        UserAchievementDto userAchievementDto = getUserAchievementDto(userId, achievementId);
+        Long achievementId = 2L;
+        UserAchievementRequestDto userAchievementRequestDto = getUserAchievementRequestDto(userId, achievementId);
+        UserAchievementDto userAcheivementDto = getUserAchievementDto(userId);
         UserDto userDto = getUserDto(userId);
         Achievement achievement = getAchievement();
         UserAchievement userAchievement = getUserAchievement(achievement);
@@ -65,28 +69,28 @@ public class UserAchievementServiceTest {
         when(userServiceClient.getUser(userId)).thenReturn(userDto);
         when(achievementRepository.findById(achievementId)).thenReturn(Optional.of(achievement));
         when(userAchievementRepository.existsByUserIdAndAchievementId(userId, achievementId)).thenReturn(false);
-        when(userAchievementMapper.toDto(userAchievement)).thenReturn(userAchievementDto);
-        String message = "{\"userId\":3,\"achievementId\":3,\"createdAt\":\"2024-12-13 22:24:13\"}";
+        when(userAchievementMapper.toDto(userAchievement)).thenReturn(userAcheivementDto);
+        String message = "{\"userId\":1,\"achievementId\":2,\"createdAt\":\"2024-12-13 22:24:13\"}";
         when(objectMapper.writeValueAsString(any(AchievementEventDto.class))).thenReturn(message);
 
-        UserAchievementDto result = userAchievementService.addUserAchievement(userAchievementDto);
+        UserAchievementDto result = userAchievementService.addUserAchievement(userAchievementRequestDto);
 
         verify(userServiceClient, times(1)).getUser(userId);
         verify(achievementRepository, times(1)).findById(achievementId);
         verify(userAchievementRepository, times(1)).existsByUserIdAndAchievementId(userId, achievementId);
         verify(userAchievementRepository, times(1)).save(any(UserAchievement.class));
         verify(achievementMessagePublisher).publish(message);
-        assertEquals(userAchievementDto, result);
+        assertEquals(userAcheivementDto, result);
     }
 
     @Test
     void addUserAchievementUserNotFound() {
         Long userId = 1L;
-        UserAchievementDto userAchievementDto = getUserAchievementDto(userId, 1L);
+        UserAchievementRequestDto userAchievementRequestDto = getUserAchievementRequestDto(userId, 1L);
         when(userServiceClient.getUser(userId)).thenReturn(null);
 
         EntityNotFoundException exception = assertThrows(EntityNotFoundException.class,
-                () -> userAchievementService.addUserAchievement(userAchievementDto));
+                () -> userAchievementService.addUserAchievement(userAchievementRequestDto));
 
         assertEquals("User not found", exception.getMessage());
     }
@@ -95,14 +99,14 @@ public class UserAchievementServiceTest {
     void addUserAchievementAchievementNotFound() {
         Long userId = 1L;
         Long achievementId = 1L;
-        UserAchievementDto userAchievementDto = getUserAchievementDto(userId, achievementId);
+        UserAchievementRequestDto userAchievementRequestDto = getUserAchievementRequestDto(userId, 1L);
         UserDto userDto = getUserDto(userId);
 
         when(userServiceClient.getUser(userId)).thenReturn(userDto);
         when(achievementRepository.findById(achievementId)).thenReturn(Optional.empty());
 
         EntityNotFoundException exception = assertThrows(EntityNotFoundException.class,
-                () -> userAchievementService.addUserAchievement(userAchievementDto));
+                () -> userAchievementService.addUserAchievement(userAchievementRequestDto));
 
         assertEquals("Achievement not found", exception.getMessage());
     }
@@ -111,7 +115,7 @@ public class UserAchievementServiceTest {
     void addUserAchievement_alreadyExists() {
         Long userId = 1L;
         Long achievementId = 1L;
-        UserAchievementDto userAchievementDto = new UserAchievementDto(userId, achievementId);
+        UserAchievementRequestDto userAchievementRequestDto = new UserAchievementRequestDto(userId, achievementId);
         UserDto userDto = new UserDto(userId, "John Doe", "john.doe@example.com");
         Achievement achievement = getAchievement();
 
@@ -120,7 +124,7 @@ public class UserAchievementServiceTest {
         when(userAchievementRepository.existsByUserIdAndAchievementId(userId, achievementId)).thenReturn(true);
 
         EntityExistsException exception = assertThrows(EntityExistsException.class,
-                () -> userAchievementService.addUserAchievement(userAchievementDto));
+                () -> userAchievementService.addUserAchievement(userAchievementRequestDto));
 
         assertEquals("Achievement already exists for this user", exception.getMessage());
     }
@@ -129,7 +133,7 @@ public class UserAchievementServiceTest {
     void addUserAchievement_publishEventFailure() throws JsonProcessingException {
         Long userId = 1L;
         Long achievementId = 1L;
-        UserAchievementDto userAchievementDto = new UserAchievementDto(userId, achievementId);
+        UserAchievementRequestDto userAchievementRequestDto = new UserAchievementRequestDto(userId, achievementId);
         UserDto userDto = getUserDto(userId);
         Achievement achievement = getAchievement();
 
@@ -140,7 +144,7 @@ public class UserAchievementServiceTest {
         });
 
         IOException exception = assertThrows(IOException.class,
-                () -> userAchievementService.addUserAchievement(userAchievementDto));
+                () -> userAchievementService.addUserAchievement(userAchievementRequestDto));
 
         assertEquals("Serialization error", exception.getMessage());
     }
@@ -153,10 +157,21 @@ public class UserAchievementServiceTest {
                 .build();
     }
 
-    private static UserAchievementDto getUserAchievementDto(Long userId, Long achievementId) {
-        return UserAchievementDto.builder()
+    private static UserAchievementRequestDto getUserAchievementRequestDto(Long userId, Long achievementId) {
+        return UserAchievementRequestDto.builder()
                 .userId(userId)
                 .achievementId(achievementId)
+                .build();
+    }
+
+    private UserAchievementDto getUserAchievementDto(Long userId) {
+        return UserAchievementDto
+                .builder()
+                .userId(userId)
+                .achievement(AchievementDto.builder().title("MR PRODUCTIVITY")
+                        .description("For 1000 finished tasks")
+                        .rarity(Rarity.LEGENDARY)
+                        .points(20L).build())
                 .build();
     }
 

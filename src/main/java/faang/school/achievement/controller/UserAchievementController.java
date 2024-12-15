@@ -1,6 +1,7 @@
 package faang.school.achievement.controller;
 
 import faang.school.achievement.dto.UserAchievementDto;
+import faang.school.achievement.dto.UserAchievementRequestDto;
 import faang.school.achievement.service.UserAchievementService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +23,7 @@ public class UserAchievementController {
 
     @PostMapping("")
     @ResponseStatus(HttpStatus.OK)
-    public UserAchievementDto addUserAchievement(@RequestBody @Valid UserAchievementDto userAchievementDto) throws IOException {
-        return userAchievementService.addUserAchievement(userAchievementDto);
+    public UserAchievementDto addUserAchievement(@RequestBody @Valid UserAchievementRequestDto userAchievementRequestDto) throws IOException {
+        return userAchievementService.addUserAchievement(userAchievementRequestDto);
     }
 }

@@ -2,9 +2,11 @@ package faang.school.achievement.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import faang.school.achievement.config.context.UserContext;
+import faang.school.achievement.dto.AchievementDto;
 import faang.school.achievement.dto.UserAchievementDto;
+import faang.school.achievement.dto.UserAchievementRequestDto;
+import faang.school.achievement.model.Rarity;
 import faang.school.achievement.service.UserAchievementService;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -35,61 +37,68 @@ public class UserAchievementControllerTest {
     private UserAchievementService userAchievementService;
     @Autowired
     private ObjectMapper objectMapper;
-    private UserAchievementDto userAchievementDto;
 
-    @BeforeEach
-    public void setUp() {
-        userAchievementDto = UserAchievementDto
+    @Test
+    @DisplayName("Test addUserAchievement - Success")
+    public void testAddUserAchievementSuccess() throws Exception {
+        when(userAchievementService.addUserAchievement(any(UserAchievementRequestDto.class))).thenReturn(getUserAchievementDto());
+        mockMvc.perform(post(USER_ACHIEVEMENT_URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("x-user-id", "2")
+                        .content(objectMapper.writeValueAsString(getUserAchievementRequestDto())))
+                .andExpect(status().isOk())
+                .andExpect(content().json(objectMapper.writeValueAsString(getUserAchievementDto())));
+    }
+
+    static Stream<Object[]> invalidUserAchievementRequestDto() {
+        return Stream.of(
+                new Object[]{UserAchievementRequestDto.builder()
+                        .userId(-1L)
+                        .achievementId(2L)
+                        .build()
+                },
+                new Object[]{UserAchievementRequestDto.builder()
+                        .userId(1L)
+                        .achievementId(-2L)
+                        .build()
+                },
+                new Object[]{UserAchievementRequestDto.builder()
+                        .achievementId(2L)
+                        .build()
+                },
+                new Object[]{UserAchievementRequestDto.builder()
+                        .userId(1L)
+                        .build()
+                }
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("invalidUserAchievementRequestDto")
+    @DisplayName("Test addUserAchievement - Validation Errors")
+    public void testAddUserAchievementInvalidDto(UserAchievementRequestDto invalidDto) throws Exception {
+        mockMvc.perform(post(USER_ACHIEVEMENT_URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("x-user-id", "2")
+                        .content(objectMapper.writeValueAsString(invalidDto)))
+                .andExpect(status().isBadRequest());
+    }
+    private UserAchievementRequestDto getUserAchievementRequestDto() {
+        return UserAchievementRequestDto
                 .builder()
                 .userId(1L)
                 .achievementId(2L)
                 .build();
     }
 
-    @Test
-    @DisplayName("Test addUserAchievement - Success")
-    public void testAddUserAchievementSuccess() throws Exception {
-        when(userAchievementService.addUserAchievement(any(UserAchievementDto.class))).thenReturn(userAchievementDto);
-        mockMvc.perform(post(USER_ACHIEVEMENT_URL)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .header("x-user-id", "2")
-                        .content(objectMapper.writeValueAsString(userAchievementDto)))
-                .andExpect(status().isOk())
-                .andExpect(content().json(objectMapper.writeValueAsString(userAchievementDto)));
-    }
-
-    static Stream<Object[]> invalidUserAchievementDto() {
-        return Stream.of(
-                new Object[]{UserAchievementDto.builder()
-                        .userId(-1L)
-                        .achievementId(2L)
-                        .build()
-                },
-                new Object[]{UserAchievementDto.builder()
-                        .userId(1L)
-                        .achievementId(-2L)
-                        .build()
-                },
-                new Object[]{UserAchievementDto.builder()
-                        .achievementId(2L)
-                        .build()
-                },
-                new Object[]{UserAchievementDto.builder()
-                        .userId(1L)
-                        .build()
-                }
-        );
-
-    }
-
-    @ParameterizedTest
-    @MethodSource("invalidUserAchievementDto")
-    @DisplayName("Test addUserAchievement - Validation Errors")
-    public void testAddUserAchievementInvalidDto(UserAchievementDto invalidDto) throws Exception {
-        mockMvc.perform(post(USER_ACHIEVEMENT_URL)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .header("x-user-id", "2")
-                        .content(objectMapper.writeValueAsString(invalidDto)))
-                .andExpect(status().isBadRequest());
+    private UserAchievementDto getUserAchievementDto() {
+        return UserAchievementDto
+                .builder()
+                .userId(1L)
+                .achievement(AchievementDto.builder().title("MR PRODUCTIVITY")
+                        .description("For 1000 finished tasks")
+                        .rarity(Rarity.LEGENDARY)
+                        .points(20L).build())
+                .build();
     }
 }
