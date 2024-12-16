@@ -18,7 +18,6 @@ import java.util.List;
 @Entity
 @Table(name="achievement")
 public class Achievement {
-
     @Id
     @GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)
     private long id;
@@ -30,7 +29,7 @@ public class Achievement {
     private String description;
 
     @Column(name = "rarity", nullable = false)
-    @Enumerated(EnumType.ORDINAL)
+    @Enumerated(EnumType.STRING)
     private Rarity rarity;
 
     @OneToMany(mappedBy = "achievement")
@@ -43,12 +42,10 @@ public class Achievement {
     private long points;
 
     @CreationTimestamp
-    @Temporal(TemporalType.TIMESTAMP)
-    @Column(name = "created_at")
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
     @UpdateTimestamp
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 }
