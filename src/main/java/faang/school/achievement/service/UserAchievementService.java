@@ -50,18 +50,13 @@ public class UserAchievementService {
                 .build();
 
         userAchievementRepository.save(userAchievement);
-        publishAchievementEvent(userAchievementRequestDto);
-        return userAchievementMapper.toDto(userAchievement);
+        UserAchievementDto userAchievementDto = userAchievementMapper.toDto(userAchievement);
+        publishAchievementEvent(userAchievementDto);
+        return userAchievementDto;
     }
 
-    private void publishAchievementEvent(UserAchievementRequestDto userAchievementRequestDto) throws IOException {
-        AchievementEventDto achievementEventDto = AchievementEventDto
-                .builder()
-                .userId(userAchievementRequestDto.getUserId())
-                .achievementId(userAchievementRequestDto.getAchievementId())
-                .createdAt(LocalDateTime.now())
-                .build();
-        achievementMessagePublisher.publish(objectMapper.writeValueAsString(achievementEventDto));
+    private void publishAchievementEvent(UserAchievementDto userAchievementDto) throws IOException {
+        achievementMessagePublisher.publish(objectMapper.writeValueAsString(userAchievementDto));
     }
 
     private void validateUserIdExists(Long userId) {
