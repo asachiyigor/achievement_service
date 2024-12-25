@@ -1,18 +1,13 @@
 package faang.school.achievement.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.Fetch;
-import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import java.io.Serial;
-import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -22,10 +17,7 @@ import java.util.List;
 @Builder
 @Entity
 @Table(name="achievement")
-public class Achievement implements Serializable {
-    @Serial
-    private static final long serialVersionUID = 1L;
-
+public class Achievement {
     @Id
     @GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)
     private long id;
@@ -40,13 +32,9 @@ public class Achievement implements Serializable {
     @Enumerated(EnumType.STRING)
     private Rarity rarity;
 
-    @JsonIgnore
-    @Fetch(FetchMode.JOIN)
     @OneToMany(mappedBy = "achievement")
     private List<UserAchievement> userAchievements;
 
-    @JsonIgnore
-    @Fetch(FetchMode.JOIN)
     @OneToMany(mappedBy = "achievement")
     private List<AchievementProgress> progresses;
 
