@@ -12,8 +12,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.io.IOException;
-
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/userachievement")
@@ -23,7 +21,7 @@ public class UserAchievementController {
 
     @PostMapping("")
     @ResponseStatus(HttpStatus.OK)
-    public UserAchievementDto addUserAchievement(@RequestBody @Valid UserAchievementRequestDto userAchievementRequestDto) throws IOException {
+    public UserAchievementDto addUserAchievement(@RequestBody @Valid UserAchievementRequestDto userAchievementRequestDto) {
         return userAchievementService.addUserAchievement(userAchievementRequestDto);
     }
 }

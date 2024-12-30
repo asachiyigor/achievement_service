@@ -1,8 +1,8 @@
 package faang.school.achievement.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import faang.school.achievement.client.UserServiceClient;
-import faang.school.achievement.dto.AchievementEventDto;
 import faang.school.achievement.dto.UserAchievementDto;
 import faang.school.achievement.dto.UserAchievementRequestDto;
 import faang.school.achievement.dto.UserDto;
@@ -15,11 +15,10 @@ import faang.school.achievement.repository.UserAchievementRepository;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
-import java.time.LocalDateTime;
-
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserAchievementService {
@@ -30,7 +29,7 @@ public class UserAchievementService {
     private final AchievementMessagePublisher achievementMessagePublisher;
     private final ObjectMapper objectMapper;
 
-    public UserAchievementDto addUserAchievement(UserAchievementRequestDto userAchievementRequestDto) throws IOException {
+    public UserAchievementDto addUserAchievement(UserAchievementRequestDto userAchievementRequestDto) {
         Long userId = userAchievementRequestDto.getUserId();
         Long achievementId = userAchievementRequestDto.getAchievementId();
 
@@ -55,8 +54,12 @@ public class UserAchievementService {
         return userAchievementDto;
     }
 
-    private void publishAchievementEvent(UserAchievementDto userAchievementDto) throws IOException {
-        achievementMessagePublisher.publish(objectMapper.writeValueAsString(userAchievementDto));
+    private void publishAchievementEvent(UserAchievementDto userAchievementDto) {
+        try {
+            achievementMessagePublisher.publish(objectMapper.writeValueAsString(userAchievementDto));
+        } catch (JsonProcessingException e) {
+            log.error("Failed to parse Achievement Event: ", e);
+        }
     }
 
     private void validateUserIdExists(Long userId) {
