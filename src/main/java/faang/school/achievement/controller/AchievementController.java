@@ -1,4 +1,4 @@
-package faang.school.achievement.controllers;
+package faang.school.achievement.controller;
 
 import faang.school.achievement.dto.AchievementDto;
 import faang.school.achievement.dto.AchievementFilterDto;
