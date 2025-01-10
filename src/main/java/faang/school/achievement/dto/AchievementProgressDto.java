@@ -10,6 +10,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Data
 public class AchievementProgressDto {
+    private long id;
     private AchievementDto achievement;
+    private long userId;
     private long currentPoints;
+    private long version;
 }

@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class AchievementDto {
+    private long id;
     private String title;
     private String description;
     private Rarity rarity;

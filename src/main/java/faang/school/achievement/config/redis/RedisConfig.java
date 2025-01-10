@@ -1,6 +1,7 @@
 package faang.school.achievement.config.redis;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import faang.school.achievement.listener.TaskEventListener;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -9,6 +10,8 @@ import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.listener.ChannelTopic;
+import org.springframework.data.redis.listener.RedisMessageListenerContainer;
+import org.springframework.data.redis.listener.adapter.MessageListenerAdapter;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
@@ -18,8 +21,8 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 public class RedisConfig {
     private final RedisProperties redisProperties;
 
-    @Value("${spring.data.redis.channel.achievement}")
-    private String achievementTopic;
+    @Value("${spring.data.redis.channel.tasks}")
+    private String tasks_view_channel;
 
     @Bean
     JedisConnectionFactory jedisConnectionFactory() {
@@ -40,8 +43,22 @@ public class RedisConfig {
         return template;
     }
 
+    @Bean("taskTopic")
+    public ChannelTopic ChannelTopicTask() {
+        return new ChannelTopic(tasks_view_channel);
+    }
+
     @Bean
-    public ChannelTopic ChannelTopicAchievement() {
-        return new ChannelTopic(achievementTopic);
+    RedisMessageListenerContainer redisMessageListenerContainer(
+            TaskEventListener taskEventListener) {
+        RedisMessageListenerContainer container = new RedisMessageListenerContainer();
+        container.setConnectionFactory(jedisConnectionFactory());
+        container.addMessageListener(taskEventListener, ChannelTopicTask());
+        return container;
+    }
+
+    @Bean
+    MessageListenerAdapter TaskEventListener(TaskEventListener taskEventListener) {
+        return new MessageListenerAdapter(taskEventListener);
     }
 }

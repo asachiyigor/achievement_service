@@ -27,5 +27,9 @@ public interface AchievementProgressRepository extends CrudRepository<Achievemen
     @Modifying
     void createProgressIfNecessary(long userId, long achievementId);
 
+    boolean existsByUserIdAndAchievementId(long userId, long achievementId);
+
     List<AchievementProgress> findByUserId(long userId);
+
+    List<AchievementProgress> findAllByUserId(long userId);
 }

@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class UserAchievementDto {
+    private long id;
     private long userId;
     private AchievementDto achievement;
 }

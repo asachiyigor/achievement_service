@@ -8,6 +8,7 @@ import faang.school.achievement.model.Achievement;
 import faang.school.achievement.model.AchievementProgress;
 import faang.school.achievement.model.UserAchievement;
 import org.mapstruct.Mapper;
+import org.mapstruct.Named;
 import org.mapstruct.ReportingPolicy;
 import org.mapstruct.Mapping;
 
@@ -23,4 +24,14 @@ public interface AchievementMapper {
     @Mapping(target = "userAchievements", ignore = true)
     @Mapping(target = "progresses", ignore = true)
     Achievement fromCacheDtoToEntity(AchievementCacheDto dto);
+
+    @Named("achievementToDto")
+    AchievementDto toDto(Achievement achievement);
+    Achievement toEntity(AchievementDto achievementDto);
+
+    AchievementProgressDto toDto(AchievementProgress achievementProgress);
+    AchievementProgress toEntity(AchievementProgressDto achievementProgressDto);
+
+    UserAchievement toEntity(UserAchievementDto userAchievementDto);
+    UserAchievementDto toDto(UserAchievement userAchievement);
 }

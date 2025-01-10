@@ -23,7 +23,7 @@ spring:
       host: localhost
       channel:
         achievement: achievement_channel
-        follower: follower_channel
+        tasks: tasks_view_channel
 
 server:
   port: 8085
@@ -38,3 +38,18 @@ project-service:
 user-service:
   host: localhost
   port: 8080
+
+async:
+  executor:
+    core-pool-size: 2
+    max-pool-size: 4
+    queue-capacity: 50
+    thread-name-prefix: "Achievement-"
+    await-termination-seconds: 60
+
+monitoring:
+  thread-pool:
+    rate: 60000
+    thresholds:
+      pool-utilization: 80
+      queue-utilization: 70
