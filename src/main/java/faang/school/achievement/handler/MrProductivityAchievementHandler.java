@@ -36,7 +36,7 @@ public class MrProductivityAchievementHandler extends TaskEventHandler {
     @Async("taskExecutor")
     @Transactional(
     propagation = Propagation.REQUIRES_NEW,
-    isolation = Isolation.REPEATABLE_READ,
+    isolation = Isolation.READ_COMMITTED,
     rollbackFor = Exception.class)
     @Retryable(
             value = {OptimisticLockingFailureException.class},
